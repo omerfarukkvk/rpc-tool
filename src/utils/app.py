@@ -1,19 +1,43 @@
+import os
 import tkinter as tk
 from tkinter import ttk
+from dotenv import load_dotenv
+import os
+
+import requests
 from enums import RPCNames
+from utils.handle_rpc import handle_response
 
 combo = None
 window = None
+load_dotenv() # Load environment variables from .env file
+ip = os.getenv("IP")
+nakama_host = f"http://{ip}"
+endpoint = "?http_key=defaulthttpkey&unwrap=true"
 
-def on_send_rpc_button_select(event):
+def call_rpc(rpc_name: RPCNames, payload):
+    if rpc_name == RPCNames.RpcNames.Empty:
+        return
+    
+    try:
+        url = f"{nakama_host}/v2/rpc/{rpc_name}{endpoint}"
+        print(f"Calling RPC: {rpc_name} with payload: {payload} at {url}")
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        data = response.json()
+        handle_response(data)
+    except:
+        pass
+
+def on_send_rpc_button_select():
     selected_value = combo.get()
-    window.title(f"Selected RPC: {selected_value}")
-    print(f"Seçilen RPC: {selected_value}")
+    call_rpc(RPCNames.RpcNames[selected_value].value, {})
+    print(f"Call RPC: {selected_value}")
 
 def on_dropdown_select(event):
     selected_value = combo.get()
     window.title(f"Selected RPC: {selected_value}")
-    print(f"Seçilen RPC: {selected_value}")
+    print(f"Selected RPC: {selected_value}")
 
 def set_rpc_names(root):
     global combo
